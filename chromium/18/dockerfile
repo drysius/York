@@ -1,6 +1,6 @@
 FROM --platform=$TARGETOS/$TARGETARCH node:18-bullseye-slim
 
-LABEL author="Drylian" maintainer="danielolxlol@gmail.com"
+LABEL author="drysius" maintainer="danielolxlol@gmail.com"
 
 ENV DEBIAN_FRONTEND noninteractive
 

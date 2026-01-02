@@ -2,7 +2,7 @@
 # parece sacanagem mais aqui dentro tem um espaço que deve ser usado caso queira colocar versão " " o texto todo "versão: "
 # icones 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ ✅ ❌ 
 # Versão do Entrypoint
-entrypoint_vurl="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual"
+entrypoint_vurl="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual"
 entrypoint_version=$(curl -s "$entrypoint_vurl" | grep "Entrypoint: " | awk '{print $2}')
 # Aguarde até que o contêiner seja totalmente inicializado
 sleep 1
@@ -21,7 +21,7 @@ Online_Mode3="allow 192.168.0.0/24;"
 Online_Mode4="allow 172.17.0.0/16;"
 fi
 # URL para a versão mais recente
-latest_version_url="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual"
+latest_version_url="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual"
 
 # Extrai a versão atual do Pasta local version.sh
 current_version=$(grep "Instalação: " ./Status/Versao_Atual | awk '{print $2}')
@@ -147,7 +147,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
   echo "${bold}${lightgreen}==>                                                                        <=="
   echo "${bold}${lightgreen}==>   ${bold}${vermelho}Uma ou mais Variantes estão indefinidas neste egg, recomendado que${bold}${lightgreen}   <=="
   echo "${bold}${lightgreen}==>             ${bold}${vermelho}o atualize para versão mais recente do github.${bold}${lightgreen}             <=="
-  echo "${bold}${lightgreen}==>            ${bold}${vermelho} https://github.com/drylian/Eggs/tree/main/Eggs ${bold}${lightgreen}            <=="
+  echo "${bold}${lightgreen}==>            ${bold}${vermelho} https://github.com/drysius/Eggs/tree/main/Eggs ${bold}${lightgreen}            <=="
   echo "${bold}${lightgreen}==>                                                                        <=="
   echo "${bold}${lightgreen}=============================================================================="
   echo " "
@@ -204,7 +204,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
       cp -r ./Cache/nginx/* ./nginx
       rm -rf ./Cache
       mkdir ./Status
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Leiame.txt  -o ./Status/Leia-me.txt
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Leiame.txt  -o ./Status/Leia-me.txt
       touch ./Status/Nginx_instalador
     fi
   # Fim do Nginx---------------------------------------------------
@@ -216,7 +216,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
       echo "${bold}${lightgreen}==> 🔴 Verificador do Nginx Explorer ${bold}${vermelho}não foi detectado ${bold}${lightgreen}, Iniciando download."
       mkdir ./Explorer
       
-      git clone -q https://github.com/drylian/nginx-explorer ./Explorer
+      git clone -q https://github.com/drysius/nginx-explorer ./Explorer
       touch ./Status/Explorer_instalador
     fi
   # Fim do Nginx Explorador----------------------------------------
@@ -311,7 +311,7 @@ server {
 }
 EOL
       echo "${bold}${lightgreen}==> 🟠 Criando Introdução."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
       touch ./Status/Default.conf_instalado
     fi
 # Fim do default.conf--------------------------------------------
@@ -321,7 +321,7 @@ EOL
       echo "${bold}${lightgreen}==> 🟢 Versão Atual:$current_version."
     else
       echo "${bold}${lightgreen}==> 🟢 Setando Versão Recente:$latest_version."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual -o ./Status/Versao_Atual
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual -o ./Status/Versao_Atual
     fi
   # Fim Setando Versão--------------------------------------------
 
@@ -333,16 +333,16 @@ EOL
     if [[ -f "./index.html" ]]; then
     echo "${bold}${lightgreen}==> 🟢 Iniciando HTML Na Nuvem"
       rm ./index.html
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     else
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     fi
     else
     if [[ -f "./index.html" ]]; then
       echo "${bold}${lightgreen}==> 🟠 Iniciando HTML Local"
     else
       echo "${bold}${lightgreen}==> 🟠 HTML Local não detectado, baixando."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     fi
     fi
   # Fim HTML------------------------------------------------------
@@ -392,7 +392,7 @@ EOL
 
 #!/bin/sh
 #        ====================================================
-#                 Nginx Entrypoint Egg Criado por Drylian
+#                 Nginx Entrypoint Egg Criado por drysius
 #        ====================================================
 # Icones 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ ✅ ❌ 📍 ✂️ 🗑️ 🟧 🟨 ⬜ 
 # Icones ☑️ ✖️ ❎ 💾 📓 📗 📘 📙 📝 📖 📚 📰 🗞️ 🏷️ 🟥 🟩 🟦 ⚙️ 
@@ -411,9 +411,9 @@ Pasta_Base="📂Informações" # O Nome da pasta onde vai ser armazenada todas a
 Base_txt="🟢Informações.txt" # Nome do Pasta Onde vai Ficar os Verificadores do egg.
 script_log="📔Script.log.txt" # Nome da Log que o Script vai Rodar.
 debug_log="📔Debug.log.txt" # Nome da Log que vai rodar o Debug.
-Base_Url="https://github.com/drylian/Eggs" #Link do github onde pode achar o egg.
+Base_Url="https://github.com/drysius/Eggs" #Link do github onde pode achar o egg.
 version_file="./${Pasta_Base}/${Base_txt}" # Local onde a versão vai ser Armazenada.
-version_remote="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/NGINX/Vers%C3%A3o.txt" #Local onde a Versão Latest vai ser vista
+version_remote="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/NGINX/Vers%C3%A3o.txt" #Local onde a Versão Latest vai ser vista
 # Cores do Terminal
 C0=$(echo -en "\u001b[0m") # Padrão
 C1=$(echo -en "\e[1m\u001b[36m") # Cor Ciano Com negrito.
@@ -424,7 +424,7 @@ C5=$(echo -en "\e[1m\u001b[35m") # Cor Margeta Com Negrito.
 B0="\e[1m" # Negrito
 # Dependencias do Script
 # Criação da Pasta de Vefiricação
-if [[ ! -f "./${Pasta_Base}/${Base_txt}" ]]; then mkdir -p ./${Pasta_Base}; echo -e "🟢Informações Do Script\n#\n🟢Criado por Drylian\n🟢Github: https://github.com/drylian/Eggs\n🟢Versão Atual: PRÉ" > ./${Pasta_Base}/${Base_txt}; fi # Cria a pasta e o primeiro Pasta de versão.
+if [[ ! -f "./${Pasta_Base}/${Base_txt}" ]]; then mkdir -p ./${Pasta_Base}; echo -e "🟢Informações Do Script\n#\n🟢Criado por drysius\n🟢Github: https://github.com/drysius/Eggs\n🟢Versão Atual: PRÉ" > ./${Pasta_Base}/${Base_txt}; fi # Cria a pasta e o primeiro Pasta de versão.
 if [[ ! -d "${Pasta_Base}/Logs" ]]; then mkdir -p ./${Pasta_Base}/Logs; fi
 if [[ ! -d "./Arquivos" ]]; then mkdir -p ./Arquivos; fi
 if [[ ! -d "./Arquivos/Secreto" ]]; then mkdir -p ./Arquivos/Secreto; fi
@@ -467,7 +467,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
     echo "
     ${C3}.-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*+-+*-+*-+*+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+-.
     ${C3}|   UMA OU MAIS VARIANTES DO EGG ESTÃO EM FALTA, BAIXE A VERSÃO MAIS RECENTE DO EGG NO GITHUB.   |
-    ${C3}|                                 https://github.com/drylian/Eggs                                |
+    ${C3}|                                 https://github.com/drysius/Eggs                                |
     ${C3}*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*+-+*-+*-+*+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+*-+.* 
     ${C0}"
     fi
@@ -502,7 +502,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
             echo " 🔵   A Pasta ${C1}Nginx${C0} foi verificado, Continuando iniciação..."
         else
             echo " 🟡   A Pasta ${C1}Nginx${C0} ${C3}não${C0} foi encontrada, Baixando..."
-            curl -s -L -o /home/container/announce "https://github.com/drylian/Eggs/releases/latest/download/announce"
+            curl -s -L -o /home/container/announce "https://github.com/drysius/Eggs/releases/latest/download/announce"
             echo " 🔵   A Pasta ${C1}Nginx${C0} foi ${C2}baixada${C0}, Continuando iniciação..."
         fi
     else
@@ -511,12 +511,12 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
             echo " 🟡   A Pasta ${C1}Nginx${C0} foi encontrada, porém não está nas normas do script, Deletando..."
             rm -f ./announce
             echo " 🟢   Baixando a Pasta ${C1}NGINX${C0} verificado..."
-            curl -s -L -o /home/container/announce "https://github.com/drylian/Eggs/releases/latest/download/announce"
+            curl -s -L -o /home/container/announce "https://github.com/drysius/Eggs/releases/latest/download/announce"
             echo " 🔵   A Pasta ${C1}Nginx${C0} foi ${C2}baixado${C0}, Continuando iniciação..."
             echo "🟢NGINX instalado" >> "./📂Informações/🟢Informações.txt"
         else
             echo " 🟡   A Pasta ${C1}Nginx${C0} ${C3}não${C0} foi encontrada, Baixando..."
-            curl -s -L -o /home/container/announce "https://github.com/drylian/Eggs/releases/latest/download/announce"
+            curl -s -L -o /home/container/announce "https://github.com/drysius/Eggs/releases/latest/download/announce"
             echo " 🔵   A Pasta ${C1}Nginx${C0} foi ${C2}baixado${C0}, Continuando iniciação..."
             echo "🟢NGINX instalado" >> "./📂Informações/🟢Informações.txt"
         fi

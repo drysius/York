@@ -36,4 +36,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/drylian/system:${{ matrix.system }}
+            ghcr.io/drysius/system:${{ matrix.system }}

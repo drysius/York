@@ -45,7 +45,7 @@ RUN apk add --no-cache --virtual=build-dependencies --upgrade \
 RUN apk add --no-cache redis
 COPY --from=composer:latest  /usr/bin/composer /usr/bin/composer
 
-# Esse codigo o Drylian me passou
+# Esse codigo o drysius me passou
 # Instala o bash a
 RUN apk add --no-cache bash fakeroot
 # Remove o link simbólico para o shell padrão e cria um novo link simbólico para o bash

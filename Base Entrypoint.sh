@@ -12,7 +12,7 @@ Comando_stop="Sistema Entrypoint.sh Parar"                                      
 # Isto Define o novo StartUP do egg                                                                    #
 Comando_StartUP="./Base"                                                                               #
 # Isto Define o Link base do egg                                     /deixe o $Nome_egg                #
-Base_Url="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/${Nome_egg}"                     #
+Base_Url="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/${Nome_egg}"                     #
 # Isto Define a Pasta de Verificação do Egg (Use só o nome, o script ja possue ./)                     #
 Pasta_Verif="Status"                                                                                   #
 # Seta permissões Padrões                                                                              #

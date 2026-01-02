@@ -45,4 +45,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/drylian/php:${{ matrix.php }}
+            ghcr.io/drysius/php:${{ matrix.php }}

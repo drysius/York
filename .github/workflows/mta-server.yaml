@@ -36,4 +36,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/drylian/mta:${{ matrix.game }}
+            ghcr.io/drysius/mta:${{ matrix.game }}

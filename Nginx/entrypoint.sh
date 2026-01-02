@@ -2,7 +2,7 @@
 # parece sacanagem mais aqui dentro tem um espaço que deve ser usado caso queira colocar versão " " o texto todo "versão: "
 # icones 🔴 🟠 🟡 🟢 🔵 🟣 🟤 ⚫ ⚪ ✅ ❌ 
 # Versão do Entrypoint
-entrypoint_vurl="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual"
+entrypoint_vurl="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual"
 entrypoint_version=$(curl -s "$entrypoint_vurl" | grep "Entrypoint: " | awk '{print $2}')
 # Aguarde até que o contêiner seja totalmente inicializado
 sleep 1
@@ -21,7 +21,7 @@ Online_Mode3="allow 192.168.0.0/24;"
 Online_Mode4="allow 172.17.0.0/16;"
 fi
 # URL para a versão mais recente
-latest_version_url="https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual"
+latest_version_url="https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual"
 
 # Extrai a versão atual do arquivo local version.sh
 current_version=$(grep "Instalação: " ./Status/Versao_Atual | awk '{print $2}')
@@ -147,7 +147,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
   echo "${bold}${lightgreen}==>                                                                        <=="
   echo "${bold}${lightgreen}==>   ${bold}${vermelho}Uma ou mais Variantes estão indefinidas neste egg, recomendado que${bold}${lightgreen}   <=="
   echo "${bold}${lightgreen}==>             ${bold}${vermelho}o atualize para versão mais recente do github.${bold}${lightgreen}             <=="
-  echo "${bold}${lightgreen}==>            ${bold}${vermelho} https://github.com/drylian/Eggs/tree/main/Eggs ${bold}${lightgreen}            <=="
+  echo "${bold}${lightgreen}==>            ${bold}${vermelho} https://github.com/drysius/Eggs/tree/main/Eggs ${bold}${lightgreen}            <=="
   echo "${bold}${lightgreen}==>                                                                        <=="
   echo "${bold}${lightgreen}=============================================================================="
   echo " "
@@ -204,7 +204,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
       cp -r ./Cache/nginx/* ./nginx
       rm -rf ./Cache
       mkdir ./Status
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Leiame.txt  -o ./Status/Leia-me.txt
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Leiame.txt  -o ./Status/Leia-me.txt
       touch ./Status/Nginx_instalador
     fi
   # Fim do Nginx---------------------------------------------------
@@ -216,7 +216,7 @@ if [ -z ${SUPORTE_ATIVO} ] || [ "${SUPORTE_ATIVO}" == "1" ]; then
       echo "${bold}${lightgreen}==> 🔴 Verificador do Nginx Explorer ${bold}${vermelho}não foi detectado ${bold}${lightgreen}, Iniciando download."
       mkdir ./Explorer
       
-      git clone -q https://github.com/drylian/nginx-explorer ./Explorer
+      git clone -q https://github.com/drysius/nginx-explorer ./Explorer
       touch ./Status/Explorer_instalador
     fi
   # Fim do Nginx Explorador----------------------------------------
@@ -311,7 +311,7 @@ server {
 }
 EOL
       echo "${bold}${lightgreen}==> 🟠 Criando Introdução."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
       touch ./Status/Default.conf_instalado
     fi
 # Fim do default.conf--------------------------------------------
@@ -321,7 +321,7 @@ EOL
       echo "${bold}${lightgreen}==> 🟢 Versão Atual:$current_version."
     else
       echo "${bold}${lightgreen}==> 🟢 Setando Versão Recente:$latest_version."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/Versao_Atual -o ./Status/Versao_Atual
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/Versao_Atual -o ./Status/Versao_Atual
     fi
   # Fim Setando Versão--------------------------------------------
 
@@ -333,16 +333,16 @@ EOL
     if [[ -f "./index.html" ]]; then
     echo "${bold}${lightgreen}==> 🟢 Iniciando HTML Na Nuvem"
       rm ./index.html
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     else
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     fi
     else
     if [[ -f "./index.html" ]]; then
       echo "${bold}${lightgreen}==> 🟠 Iniciando HTML Local"
     else
       echo "${bold}${lightgreen}==> 🟠 HTML Local não detectado, baixando."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
     fi
     fi
   # Fim HTML------------------------------------------------------
@@ -407,8 +407,8 @@ EOL
     echo "${bold}${lightgreen}=============================================================================="
     echo "${bold}${lightgreen}==                                                                          =="
     echo "${bold}${lightgreen}==  ${bold}${vermelho} O Entrypoint Foi Finalizado Com Erro, Sistema de Restauração ativado ${bold}${lightgreen}  =="
-    echo "${bold}${lightgreen}==            ${bold}${vermelho} Caso não funcione, entre em contato com Drylian. ${bold}${lightgreen}            =="
-    echo "${bold}${lightgreen}==                      ${bold}${vermelho} https://github.com/drylian/ ${bold}${lightgreen}                       =="
+    echo "${bold}${lightgreen}==            ${bold}${vermelho} Caso não funcione, entre em contato com drysius. ${bold}${lightgreen}            =="
+    echo "${bold}${lightgreen}==                      ${bold}${vermelho} https://github.com/drysius/ ${bold}${lightgreen}                       =="
     echo "${bold}${lightgreen}==                                                                          =="
     echo "${bold}${lightgreen}=============================================================================="
     touch ./Status/Formatar_Sistema
@@ -509,7 +509,7 @@ server {
 }
 EOL
       echo "${bold}${lightgreen}==> 🟠 Criando Introdução."
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/introducao.md -o ./Arquivos/introducao.md
       touch ./Status/Default.conf_instalado
     fi
 # Fim do default.conf--------------------------------------------
@@ -518,7 +518,7 @@ if [[ -f "./index.html" ]]; then
     echo "${bold}${lightgreen}==> 🟢 Iniciando HTML Local"
     else
     echo "${bold}${lightgreen}==> 🟢 HTML Local não encontrado, Baixando"
-      curl -s https://raw.githubusercontent.com/drylian/Eggs/main/Connect/Nginx/index.html -o ./index.html
+      curl -s https://raw.githubusercontent.com/drysius/Eggs/main/Connect/Nginx/index.html -o ./index.html
   fi
   cd /home/container
 

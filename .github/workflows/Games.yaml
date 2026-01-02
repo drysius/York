@@ -38,4 +38,4 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: |
-            ghcr.io/drylian/games:${{ matrix.game }}
+            ghcr.io/drysius/games:${{ matrix.game }}
