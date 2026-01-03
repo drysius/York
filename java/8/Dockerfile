@@ -28,7 +28,7 @@
 #
 # @see https://github.com/McModLauncher/modlauncher/issues/91
 
-FROM        --platform=$TARGETOS/$TARGETARCH eclipse-temurin:8u471-jdk-focal
+FROM        --platform=$TARGETOS/$TARGETARCH azul/zulu-openjdk:8.89-8.0.471
 
 LABEL       author="Matthew Penner" maintainer="matthew@pterodactyl.io"
 
