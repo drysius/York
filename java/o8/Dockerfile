@@ -13,12 +13,12 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -O /tmp/jre8.tar.gz https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u472-b08/OpenJDK8U-jre_x64_linux_hotspot_8u472b08.tar.gz \
+RUN cp ./jre-8u471-linux-x64.tar.gz /tmp/jre8.tar.gz  \
     && tar -xzf /tmp/jre8.tar.gz -C /opt/ \
     && rm /tmp/jre8.tar.gz \
-    && mv /opt/jdk8u472-b08-jre /opt/jdk1.8.0_472
+    && mv /opt/jre1.8.0_471/ /opt/jre1.8.0_471
 
-ENV JAVA_HOME=/opt/jdk1.8.0_472
+ENV JAVA_HOME=/opt/jre1.8.0_471
 ENV PATH=$JAVA_HOME/bin:$PATH
 
 RUN apt-get update -y \
