@@ -27,7 +27,7 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Verificar instalação
-RUN java -version && javac -version
+RUN java -version
 
 RUN useradd -d /home/container -m container
 
