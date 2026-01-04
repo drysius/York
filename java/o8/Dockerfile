@@ -13,10 +13,10 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN cp ./jre-8u471-linux-x64.tar.gz /tmp/jre8.tar.gz  \
-    && tar -xzf /tmp/jre8.tar.gz -C /opt/ \
-    && rm /tmp/jre8.tar.gz \
-    && mv /opt/jre1.8.0_471/ /opt/jre1.8.0_471
+COPY ./jre-8u471-linux-x64.tar.gz /tmp/jre8.tar.gz
+
+RUN tar -xzf /tmp/jre8.tar.gz -C /opt/ \
+    && rm /tmp/jre8.tar.gz
 
 ENV JAVA_HOME=/opt/jre1.8.0_471
 ENV PATH=$JAVA_HOME/bin:$PATH
