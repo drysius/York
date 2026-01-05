@@ -13,12 +13,12 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN wget -O /tmp/jre8.tar.gz https://github.com/AdoptOpenJDK/openjdk9-binaries/releases/download/jdk-9%2B181/OpenJDK9U-jre_x64_linux_hotspot_9_181.tar.gz \
+RUN wget -O /tmp/jre8.tar.gz https://github.com/AdoptOpenJDK/openjdk10-binaries/releases/download/jdk-10.0.2%2B13.1/OpenJDK10U-jre_x64_linux_hotspot_10.0.2_13.tar.gz \
     && tar -xzf /tmp/jre8.tar.gz -C /opt/ \
     && rm /tmp/jre8.tar.gz \
-    && mv /opt/jdk-9+181-jre /opt/jre1.9.0_181
+    && mv /opt/jdk-10.0.2+13-jre /opt/jre10.0.2_13
 
-ENV JAVA_HOME=/opt/jre1.9.0_181
+ENV JAVA_HOME=/opt/jre10.0.2_13
 ENV PATH=$JAVA_HOME/bin:$PATH
 
 RUN apt-get update -y \
