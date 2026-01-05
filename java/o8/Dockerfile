@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 # Configurar ambiente não interativo
 ENV DEBIAN_FRONTEND=noninteractive
