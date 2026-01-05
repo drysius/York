@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:23.04
 
 # Configurar ambiente não interativo
 ENV DEBIAN_FRONTEND=noninteractive
