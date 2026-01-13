@@ -24,6 +24,7 @@ if [ ! -d "./hytale-downloader" ] || [[ "$(./hytale-downloader/hytale-downloader
 
         # Define execution permissions
         chmod 555 hytale-downloader/hytale-downloader-linux
+		echo "starting hytale downloader..."
     fi
 else
     echo "hytale-downloader updated."
@@ -31,6 +32,7 @@ fi
 
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
+	echo "starting hytale..."
     # Example "2026.01.13-dcad8778f"
     HYTALE_VERSION=$(./hytale-downloader/hytale-downloader-linux -print-version)
 
@@ -38,7 +40,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
     if [[ ! -f ".hytale_version" || "$(cat .hytale_version)" != "$HYTALE_VERSION" ]]; then
         echo "Downloading Hytale version $HYTALE_VERSION..."
 
-        ./hytale-downloader/hytale-downloader-linux -version "$HYTALE_VERSION"
+        ./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path "$HYTALE_VERSION.zip"
 
         unzip -o $HYTALE_VERSION.zip -d .
 
