@@ -33,8 +33,21 @@ fi
 # use to get newest credentials
 ./hytale-downloader/hytale-downloader-linux -print-version
 
+if [ -f ".hytale-downloader-credentials.json" ]; then
+    echo "Reading access_token from credentials file"
+    
+    # Simple extraction using grep and sed
+    if HYTALE_SERVER_ACCESS_TOKEN=$(grep -o '"access_token":"[^"]*"' .hytale-downloader-credentials.json | head -1 | sed 's/"access_token":"\([^"]*\)"/\1/'); then
+        if [ -n "$HYTALE_SERVER_ACCESS_TOKEN" ]; then
+            echo "Using access_token from credentials file"
+        else
+            echo "access_token not found in credentials file not authenticated"
+        fi
+    fi
+fi
+
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
-if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
+if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" || "$HYTALE_SERVER_ACCESS_TOKEN" == "null" ]]; then
 	echo "starting hytale..."
     
     # Example "2026.01.13-dcad8778f"
