@@ -33,22 +33,75 @@ fi
 # use to get newest credentials
 ./hytale-downloader/hytale-downloader-linux -print-version
 
+# Initialize variables
+HYTALE_SERVER_ACCESS_TOKEN=""
+HYTALE_SESSION_TOKEN=""
+HYTALE_IDENTITY_TOKEN=""
+HYTALE_PROFILE_UUID=""
+
+# Check for existing credentials
 if [ -f ".hytale-downloader-credentials.json" ]; then
     echo "Reading access_token from credentials file"
     
     # Simple extraction using grep and sed
-    if HYTALE_SERVER_ACCESS_TOKEN=$(grep -o '"access_token":"[^"]*"' .hytale-downloader-credentials.json | head -1 | sed 's/"access_token":"\([^"]*\)"/\1/'); then
-        if [ -n "$HYTALE_SERVER_ACCESS_TOKEN" ]; then
+    if HYTALE_ACCESS_TOKEN=$(grep -o '"access_token":"[^"]*"' .hytale-downloader-credentials.json | head -1 | sed 's/"access_token":"\([^"]*\)"/\1/'); then
+        if [ -n "$HYTALE_ACCESS_TOKEN" ]; then
             echo "Using access_token from credentials file"
+            HYTALE_SERVER_ACCESS_TOKEN="$HYTALE_ACCESS_TOKEN"
         else
-            echo "access_token not found in credentials file not authenticated"
+            echo "access_token not found in credentials file"
         fi
     fi
 fi
 
-# If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
-if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" || "$HYTALE_SERVER_ACCESS_TOKEN" == "null" ]]; then
-	echo "starting hytale..."
+# Get session if we have an access token
+if [ -n "$HYTALE_SERVER_ACCESS_TOKEN" ] && [ "$HYTALE_SERVER_ACCESS_TOKEN" != "null" ]; then
+    echo "Fetching game profiles..."
+
+    PROFILES_DATA=$(curl -s -X GET "https://account-data.hytale.com/my-account/get-profiles" -H "Authorization: Bearer $HYTALE_SERVER_ACCESS_TOKEN")
+
+    # Check if profiles list is empty
+    PROFILES_COUNT=$(echo "$PROFILES_DATA" | jq '.profiles | length')
+
+    if [ "$PROFILES_COUNT" -eq 0 ]; then
+        echo "Error: No game profiles found. You need to purchase Hytale to run a server."
+        exit 1
+    fi
+
+    HYTALE_PROFILE_UUID=$(echo "$PROFILES_DATA" | jq -r '.profiles[0].uuid')
+    HYTALE_PROFILE_USERNAME=$(echo "$PROFILES_DATA" | jq -r '.profiles[0].username')
+
+    echo "✓ Profile: $HYTALE_PROFILE_USERNAME (UUID: $HYTALE_PROFILE_UUID)"
+    echo "Creating game server session..."
+
+    SESSION_RESPONSE=$(curl -s -X POST "https://sessions.hytale.com/game-session/new" \
+      -H "Authorization: Bearer $HYTALE_SERVER_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d "{\"uuid\": \"${HYTALE_PROFILE_UUID}\"}")
+
+    # Validate JSON response
+    if ! echo "$SESSION_RESPONSE" | jq empty 2>/dev/null; then
+        echo "Error: Invalid JSON response from game session creation"
+        echo "Response: $SESSION_RESPONSE"
+        exit 1
+    fi
+
+    # Extract session and identity tokens
+    HYTALE_SESSION_TOKEN=$(echo "$SESSION_RESPONSE" | jq -r '.sessionToken')
+    HYTALE_IDENTITY_TOKEN=$(echo "$SESSION_RESPONSE" | jq -r '.identityToken')
+
+    if [ -z "$HYTALE_SESSION_TOKEN" ] || [ "$HYTALE_SESSION_TOKEN" = "null" ]; then
+        echo "Error: Failed to create game server session"
+        echo "Response: $SESSION_RESPONSE"
+        exit 1
+    fi
+
+    echo "✓ Game server session created successfully!"
+fi
+
+# If HYTALE_SESSION_TOKEN isn't set, assume the user will log in themselves
+if [[ -z "$HYTALE_SESSION_TOKEN" || "$HYTALE_SERVER_ACCESS_TOKEN" == "null" ]]; then
+	echo "Starting hytale without authentication..."
     
     # Example "2026.01.13-dcad8778f"
     HYTALE_VERSION=$(./hytale-downloader/hytale-downloader-linux -print-version)
@@ -69,4 +122,13 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" || "$HYTALE_SERVER_ACCESS_TOKEN" == "nul
     fi
 fi
 
-/java.sh $@
+# Check if we have all required tokens for authenticated mode
+if [[ -z "$HYTALE_SESSION_TOKEN" || -z "$HYTALE_IDENTITY_TOKEN" || -z "$HYTALE_PROFILE_UUID" ]]; then
+    echo "Starting Hytale without session tokens..."
+    # Start without authentication
+    exec /java.sh "$@"
+else
+    echo "Starting Hytale with authentication..."
+    # Start with authentication tokens
+    exec /java.sh "$@" --session-token "${HYTALE_SESSION_TOKEN}" --identity-token "${HYTALE_IDENTITY_TOKEN}" --owner-uuid "${HYTALE_PROFILE_UUID}"
+fi
