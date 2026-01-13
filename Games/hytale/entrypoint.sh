@@ -43,13 +43,19 @@ HYTALE_PROFILE_UUID=""
 if [ -f ".hytale-downloader-credentials.json" ]; then
     echo "Reading access_token from credentials file"
     
-    # Simple extraction using grep and sed
-    if HYTALE_ACCESS_TOKEN=$(grep -o '"access_token":"[^"]*"' .hytale-downloader-credentials.json | head -1 | sed 's/"access_token":"\([^"]*\)"/\1/'); then
-        if [ -n "$HYTALE_ACCESS_TOKEN" ]; then
-            echo "Using access_token from credentials file"
-            HYTALE_SERVER_ACCESS_TOKEN="$HYTALE_ACCESS_TOKEN"
-        else
-            echo "access_token not found in credentials file"
+    # Verificar se o arquivo de credenciais contém JSON válido
+    if ! jq empty .hytale-downloader-credentials.json 2>/dev/null; then
+        echo "Warning: Credentials file contains invalid JSON, removing..."
+        rm -f .hytale-downloader-credentials.json
+    else
+        # Simple extraction using grep and sed
+        if HYTALE_ACCESS_TOKEN=$(grep -o '"access_token":"[^"]*"' .hytale-downloader-credentials.json | head -1 | sed 's/"access_token":"\([^"]*\)"/\1/'); then
+            if [ -n "$HYTALE_ACCESS_TOKEN" ]; then
+                echo "Using access_token from credentials file"
+                HYTALE_SERVER_ACCESS_TOKEN="$HYTALE_ACCESS_TOKEN"
+            else
+                echo "access_token not found in credentials file"
+            fi
         fi
     fi
 fi
@@ -58,8 +64,28 @@ fi
 if [ -n "$HYTALE_SERVER_ACCESS_TOKEN" ] && [ "$HYTALE_SERVER_ACCESS_TOKEN" != "null" ]; then
     echo "Fetching game profiles..."
 
-    PROFILES_DATA=$(curl -s -X GET "https://account-data.hytale.com/my-account/get-profiles" -H "Authorization: Bearer $HYTALE_SERVER_ACCESS_TOKEN")
-
+    # Usar curl com timeout e captura do código HTTP
+    PROFILES_RESPONSE=$(curl -s -w "\n%{http_code}" -X GET "https://account-data.hytale.com/my-account/get-profiles" \
+        -H "Authorization: Bearer $HYTALE_SERVER_ACCESS_TOKEN" \
+        --max-time 30)
+    
+    # Separar o código HTTP do corpo da resposta
+    HTTP_CODE=$(echo "$PROFILES_RESPONSE" | tail -n 1)
+    PROFILES_DATA=$(echo "$PROFILES_RESPONSE" | head -n -1)
+    
+    if [ "$HTTP_CODE" != "200" ]; then
+        echo "Error: Failed to fetch profiles (HTTP $HTTP_CODE)"
+        echo "Response start: ${PROFILES_DATA:0:200}"
+        exit 1
+    fi
+    
+    # Verificar se é JSON válido
+    if ! echo "$PROFILES_DATA" | jq empty 2>/dev/null; then
+        echo "Error: Invalid JSON response from profiles API"
+        echo "Response start: ${PROFILES_DATA:0:200}"
+        exit 1
+    fi
+    
     # Check if profiles list is empty
     PROFILES_COUNT=$(echo "$PROFILES_DATA" | jq '.profiles | length')
 
@@ -74,25 +100,36 @@ if [ -n "$HYTALE_SERVER_ACCESS_TOKEN" ] && [ "$HYTALE_SERVER_ACCESS_TOKEN" != "n
     echo "✓ Profile: $HYTALE_PROFILE_USERNAME (UUID: $HYTALE_PROFILE_UUID)"
     echo "Creating game server session..."
 
-    SESSION_RESPONSE=$(curl -s -X POST "https://sessions.hytale.com/game-session/new" \
+    # Criar sessão com verificação de resposta
+    SESSION_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST "https://sessions.hytale.com/game-session/new" \
       -H "Authorization: Bearer $HYTALE_SERVER_ACCESS_TOKEN" \
       -H "Content-Type: application/json" \
-      -d "{\"uuid\": \"${HYTALE_PROFILE_UUID}\"}")
+      -d "{\"uuid\": \"${HYTALE_PROFILE_UUID}\"}" \
+      --max-time 30)
+    
+    HTTP_CODE=$(echo "$SESSION_RESPONSE" | tail -n 1)
+    SESSION_DATA=$(echo "$SESSION_RESPONSE" | head -n -1)
+    
+    if [ "$HTTP_CODE" != "200" ]; then
+        echo "Error: Failed to create game session (HTTP $HTTP_CODE)"
+        echo "Response start: ${SESSION_DATA:0:200}"
+        exit 1
+    fi
 
     # Validate JSON response
-    if ! echo "$SESSION_RESPONSE" | jq empty 2>/dev/null; then
+    if ! echo "$SESSION_DATA" | jq empty 2>/dev/null; then
         echo "Error: Invalid JSON response from game session creation"
-        echo "Response: $SESSION_RESPONSE"
+        echo "Response: $SESSION_DATA"
         exit 1
     fi
 
     # Extract session and identity tokens
-    HYTALE_SESSION_TOKEN=$(echo "$SESSION_RESPONSE" | jq -r '.sessionToken')
-    HYTALE_IDENTITY_TOKEN=$(echo "$SESSION_RESPONSE" | jq -r '.identityToken')
+    HYTALE_SESSION_TOKEN=$(echo "$SESSION_DATA" | jq -r '.sessionToken')
+    HYTALE_IDENTITY_TOKEN=$(echo "$SESSION_DATA" | jq -r '.identityToken')
 
     if [ -z "$HYTALE_SESSION_TOKEN" ] || [ "$HYTALE_SESSION_TOKEN" = "null" ]; then
         echo "Error: Failed to create game server session"
-        echo "Response: $SESSION_RESPONSE"
+        echo "Response: $SESSION_DATA"
         exit 1
     fi
 
