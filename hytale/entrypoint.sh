@@ -30,25 +30,23 @@ else
     echo "hytale-downloader updated."
 fi
 
-# If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
-if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
-    # Example "2026.01.13-dcad8778f"
-    HYTALE_VERSION=$(./hytale-downloader/hytale-downloader-linux -print-version)
+echo "starting hytale..."
+# Example "2026.01.13-dcad8778f"
+HYTALE_VERSION=$(./hytale-downloader/hytale-downloader-linux -print-version)
 
-    # check if version file exists and matches
-    if [[ ! -f ".hytale_version" || "$(cat .hytale_version)" != "$HYTALE_VERSION" ]]; then
-        echo "Downloading Hytale version $HYTALE_VERSION..."
+# check if version file exists and matches
+if [[ ! -f ".hytale_version" || "$(cat .hytale_version)" != "$HYTALE_VERSION" ]]; then
+	echo "Downloading Hytale version $HYTALE_VERSION..."
 
-        ./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path "$HYTALE_VERSION.zip"
+	./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path "$HYTALE_VERSION.zip"
 
-        unzip -o $HYTALE_VERSION.zip -d .
+	unzip -o $HYTALE_VERSION.zip -d .
 
-        rm $HYTALE_VERSION.zip
+	rm $HYTALE_VERSION.zip
 
-        echo "$HYTALE_VERSION" > .hytale_version
-    else
-        echo "Hytale version $HYTALE_VERSION already downloaded."
-    fi
+	echo "$HYTALE_VERSION" > .hytale_version
+else
+	echo "Hytale version $HYTALE_VERSION already downloaded."
 fi
 
 /java.sh $@
