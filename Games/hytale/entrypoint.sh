@@ -30,11 +30,14 @@ else
     echo "hytale-downloader updated."
 fi
 
+# use to get newest credentials
+./hytale-downloader/hytale-downloader-linux -print-version
+
 # If HYTALE_SERVER_SESSION_TOKEN isn't set, assume the user will log in themselves, rather than a host's GSP
 if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
 	echo "starting hytale..."
+    
     # Example "2026.01.13-dcad8778f"
-    ./hytale-downloader/hytale-downloader-linux -print-version
     HYTALE_VERSION=$(./hytale-downloader/hytale-downloader-linux -print-version)
 
     # check if version file exists and matches
