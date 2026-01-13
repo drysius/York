@@ -39,7 +39,7 @@ if [[ -z "$HYTALE_SERVER_SESSION_TOKEN" ]]; then
     if [[ ! -f ".hytale_version" || "$(cat .hytale_version)" != "$HYTALE_VERSION" ]]; then
         echo "Downloading Hytale version $HYTALE_VERSION..."
 
-        ./hytale-downloader/hytale-downloader-linux
+        ./hytale-downloader/hytale-downloader-linux -patchline "$HYTALE_PATCHLINE" -download-path "$HYTALE_VERSION.zip"
 
         unzip -o $HYTALE_VERSION.zip -d .
 
