@@ -1,4 +1,4 @@
-FROM debian:bullseye
+FROM        --platform=$TARGETOS/$TARGETARCH ubuntu:24.04
 
 RUN apt install coreutils
 
