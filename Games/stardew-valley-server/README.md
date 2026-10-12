@@ -32,8 +32,12 @@ porque o Pterodactyl inicia sem root.
 
 - ✅ **Build**: compila localmente (WSL) e no CI; imagem publicada em
   `ghcr.io/drysius/games:stardew-valley-server`.
-- ⏳ **Runtime em Pterodactyl**: ainda não validado ponta a ponta (depende de credencial
-  Steam + servidor Pterodactyl real). Ver pontos abaixo.
+- ✅ **Boot** (verificado como uid não-build, com os volumes anônimos da imagem): sobe
+  Xvfb, steam-service (:3001) e o servidor (SMAPI + phase responder na porta alocada),
+  gravando tudo sob `/home/container`. Sem erros de permissão/filesystem.
+- ✅ **Porta**: segue `SERVER_PORT` (alocação primária do Pterodactyl) automaticamente.
+- ⏳ **Download + jogo rodando**: precisa de credencial Steam real (conta dona do jogo).
+  Sem ela o servidor fica em "Waiting for steam-auth..." (comportamento correto).
 
 ### Verificado
 
