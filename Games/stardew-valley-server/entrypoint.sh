@@ -48,7 +48,9 @@ export XDG_CONFIG_HOME=/home/container/xdg/config
 export SMAPI_MODS_PATH=/home/container/Mods
 export DISPLAY_WIDTH=${DISPLAY_WIDTH:-1280}
 export DISPLAY_HEIGHT=${DISPLAY_HEIGHT:-720}
-export API_PORT=${API_PORT:-8080}
+# Porta base do servidor: o Pterodactyl injeta SERVER_PORT com a alocacao primaria.
+# Ela tem prioridade; cai para API_PORT e por fim 8080.
+export API_PORT=${SERVER_PORT:-${API_PORT:-8080}}
 export STEAM_AUTH_PORT=${STEAM_AUTH_PORT:-3001}
 export STEAM_AUTH_URL="http://127.0.0.1:${STEAM_AUTH_PORT}"
 export SETTINGS_PATH=${SETTINGS_PATH:-/home/container/settings/server-settings.json}
@@ -71,9 +73,23 @@ done
 # 4) STEAM DOWNLOADER (sidecar oficial, agora em background)
 # serve o endpoint HTTP e baixa o jogo em GAME_DIR (subcomando "serve" confirmado).
 # -----------------------------------------------------------------------------
-if [ -z "${STEAM_USERNAME:-}" ] && [ -z "${STEAM_REFRESH_TOKEN:-}" ]; then
-    echo "[ptero] AVISO: STEAM_USERNAME/STEAM_REFRESH_TOKEN nao definidos --"
-    echo "[ptero] o download do jogo vai falhar. Configure nas variaveis do egg."
+# Credenciais Steam: sem login o jogo NAO baixa e o servidor fica preso em
+# "Waiting for steam-auth...". Avisamos de forma clara qual variavel falta.
+if [ -z "${STEAM_REFRESH_TOKEN:-}" ]; then
+    if [ -z "${STEAM_USERNAME:-}" ]; then
+        echo "[ptero] ====================================================================="
+        echo "[ptero]  ATENCAO: nenhuma credencial Steam definida!"
+        echo "[ptero]  Defina STEAM_USERNAME + STEAM_PASSWORD (ou STEAM_REFRESH_TOKEN)"
+        echo "[ptero]  nas variaveis do servidor. Sem isso o jogo nao sera baixado e o"
+        echo "[ptero]  servidor ficara parado esperando o download."
+        echo "[ptero] ====================================================================="
+    elif [ -z "${STEAM_PASSWORD:-}" ]; then
+        echo "[ptero] ====================================================================="
+        echo "[ptero]  ATENCAO: STEAM_USERNAME definido, mas sem STEAM_PASSWORD nem"
+        echo "[ptero]  STEAM_REFRESH_TOKEN. Se ainda nao ha sessao salva, o login vai"
+        echo "[ptero]  falhar. Preencha STEAM_PASSWORD (ou use STEAM_REFRESH_TOKEN)."
+        echo "[ptero] ====================================================================="
+    fi
 fi
 echo "[ptero] iniciando steam-service em 127.0.0.1:${STEAM_AUTH_PORT}..."
 (
