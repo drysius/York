@@ -59,6 +59,20 @@ export SETTINGS_PATH=${SETTINGS_PATH:-/home/container/settings/server-settings.j
 # startapp.sh aborta se SDVD_COMPOSE_REV nao bater com o esperado da imagem.
 export SDVD_COMPOSE_REV=${SDVD_COMPOSE_REV:-4}
 
+# Opcoes do servidor/mod lidas direto do ambiente (Env.cs). Exportamos com os
+# defaults do upstream: o `:-default` tambem blinda contra o Pterodactyl injetar a
+# variavel vazia (o que sobrescreveria o default embutido na imagem).
+export SERVER_FPS=${SERVER_FPS:-0}                       # 0 = sem render (perf); >0 = desenha p/ VNC
+export API_ENABLED=${API_ENABLED:-true}                  # false desliga a API (e quebra a deteccao de "iniciado")
+export MAX_LOGIN_ATTEMPTS=${MAX_LOGIN_ATTEMPTS:-3}       # tentativas de !login antes do kick
+export AUTH_TIMEOUT_SECONDS=${AUTH_TIMEOUT_SECONDS:-120} # kick de nao-autenticados (0 = desliga)
+export AUTO_SLEEP_GRACE_SECONDS=${AUTO_SLEEP_GRACE_SECONDS:-300} # espera do host vazio antes de dormir
+export HEALTH_CHECK_SECONDS=${HEALTH_CHECK_SECONDS:-300} # intervalo do health check interno
+export VERBOSE_LOGGING=${VERBOSE_LOGGING:-false}         # override do log verboso
+# Lidas pelo steam-service:
+export VALIDATE_ON_BOOT=${VALIDATE_ON_BOOT:-true}        # revalida arquivos do jogo a cada boot
+export STEAM_KEEP_LANGUAGES=${STEAM_KEEP_LANGUAGES:-}    # vazio = so ingles (menor download)
+
 # -----------------------------------------------------------------------------
 # 2b) IP CONNECTIONS -- ativado por padrao (host). Controlado por ALLOW_IP_CONNECTIONS.
 # So vem do server-settings.json (sem env no mod), entao escrevemos/patchamos o JSON.
@@ -132,19 +146,56 @@ echo "[ptero] iniciando steam-service em 127.0.0.1:${STEAM_AUTH_PORT}..."
     STEAM_USERNAME="${STEAM_USERNAME:-}" \
     STEAM_PASSWORD="${STEAM_PASSWORD:-}" \
     STEAM_REFRESH_TOKEN="${STEAM_REFRESH_TOKEN:-}" \
+    STEAM_KEEP_LANGUAGES="${STEAM_KEEP_LANGUAGES:-}" \
+    VALIDATE_ON_BOOT="${VALIDATE_ON_BOOT:-true}" \
     dotnet SteamService.dll serve
 ) &
 STEAM_PID=$!
 
+# -----------------------------------------------------------------------------
+# 4b) PONTE DE COMANDOS: console do Pterodactyl (stdin) -> console do SMAPI.
+# O startapp.sh roda o SMAPI lendo de um FIFO (/tmp/junimo/smapi-input), NAO do
+# stdin do processo (o caminho oficial e o `attach-cli`). Entao repassamos o nosso
+# stdin -- o console do painel -- para esse FIFO, habilitando os comandos de console
+# do servidor direto no Pterodactyl: info, invitecode, settings, saves, cabins,
+# farmhand, rendering, host-auto, host-visibility.
+# OBS: os comandos de CHAT (!kick, !ban, etc.) exigem um jogador conectado in-game
+# e NAO passam por aqui -- use-os pelo chat do jogo ou pela API HTTP.
+# O FIFO fica em /tmp (fora do sed /data/ do build), entao o caminho e fixo.
+# -----------------------------------------------------------------------------
+SMAPI_INPUT_FIFO="/tmp/junimo/smapi-input"
+# Preserva o stdin do console: jobs em background num shell nao-interativo herdam
+# /dev/null, entao guardamos o descritor real em fd 3.
+exec 3<&0
+(
+    # Espera o startapp.sh criar o FIFO. So existe apos o download do jogo + instalacao
+    # do SMAPI, que no 1o boot pode demorar -- por isso a janela e larga (~60 min).
+    for _ in $(seq 1 7200); do
+        [ -p "${SMAPI_INPUT_FIFO}" ] && break
+        sleep 0.5
+    done
+    if [ -p "${SMAPI_INPUT_FIFO}" ]; then
+        echo "[ptero] console conectado ao SMAPI -- experimente: info | invitecode | settings show"
+        # O `tail -f` do startapp mantem o FIFO aberto entre escritas; repassamos
+        # linha a linha o que vier do console do painel.
+        cat <&3 > "${SMAPI_INPUT_FIFO}"
+    else
+        echo "[ptero] aviso: FIFO de comandos do SMAPI nao apareceu; o console nao sera conectado."
+    fi
+) &
+CMDBRIDGE_PID=$!
+
 # Derruba os processos de apoio quando o servidor sair
 cleanup() {
-    kill "${STEAM_PID}" "${XVFB_PID}" >/dev/null 2>&1 || true
+    kill "${STEAM_PID}" "${XVFB_PID}" "${CMDBRIDGE_PID}" >/dev/null 2>&1 || true
 }
 trap cleanup EXIT INT TERM
 
 # -----------------------------------------------------------------------------
 # 5) SERVIDOR -- entrega para o launcher oficial, que baixa o jogo (1o boot),
 # instala o SMAPI e sobe o mod JunimoServer, ficando em foreground.
+# O stdin do startapp vai para /dev/null: o SMAPI recebe comandos pelo FIFO (via a
+# ponte acima), e o `script` interno do startapp nao deve competir pelo console.
 # -----------------------------------------------------------------------------
 echo "[ptero] iniciando Stardew Valley Dedicated Server..."
-exec /startapp.sh
+exec /startapp.sh </dev/null

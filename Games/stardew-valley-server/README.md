@@ -14,7 +14,7 @@ embute o `sdvd/steam-service` (downloader da Steam). O `entrypoint.sh`:
 
 1. **Persistência** — redireciona `/data` e `/config` (onde o jogo/saves vivem) para
    dentro de `/home/container` via symlink, já que o Pterodactyl só persiste esse volume.
-2. **Display** — sobe um `Xvfb :0` (o jogo renderiza mesmo headless).
+2. **Display** — sobe um `Xvnc :0` (display do jogo + servidor VNC numa porta).
 3. **Steam** — roda o `steam-service` em background em `127.0.0.1:3001` (substitui o
    container sidecar); baixa o jogo no primeiro boot.
 4. **Servidor** — entrega para o `startapp.sh` oficial, que instala o SMAPI e sobe o mod.
@@ -58,6 +58,63 @@ A imagem roda **Xvnc** servindo o display `:0` e um servidor VNC na porta `VNC_P
 (padrão 5900). Aloque essa porta, defina `VNC_PASSWORD` (máx 8 chars) e conecte com um
 cliente VNC (TigerVNC, RealVNC) em `IP:VNC_PORT`. Sem senha o VNC fica aberto.
 (Não é a UI web noVNC do projeto original — essa depende do stack root da baseimage-gui.)
+
+## Comandos
+
+O JunimoServer já traz um sistema de comandos completo — não é preciso adicionar nada.
+Há três superfícies:
+
+### 1. Console do servidor (direto no console do Pterodactyl)
+
+O `entrypoint.sh` faz uma **ponte do stdin do painel para o FIFO do SMAPI**
+(`/tmp/junimo/smapi-input`), então estes comandos funcionam **digitando no console do
+servidor** no painel:
+
+| Comando | O que faz |
+|---------|-----------|
+| `info` | Status: fazenda, versão, uptime, data, players, invite code, render. |
+| `invitecode` | Mostra o invite code atual (Steam relay). |
+| `settings show` / `validate` / `newgame [--confirm]` / `verbose` | Config do `server-settings.json`. |
+| `saves` / `saves info <n>` / `saves import <n>` / `saves reload` | Gerencia saves. |
+| `cabins` / `cabins add` / `cabins stackspot` / `cabins migrate ...` | Gerencia cabines. |
+| `farmhand release <n|uid>` / `farmhand rebind <n|uid> <platformId>` | Posse de farmhands. |
+| `rendering <fps>` / `rendering status` | Liga/desliga o render (ver `SERVER_FPS`). |
+| `host-auto` | Alterna o modo host automático (auto-sleep, skip de eventos). |
+| `host-visibility` | Alterna a visibilidade do host para os outros jogadores. |
+
+> O `tail -f` interno do servidor mantém o FIFO aberto; a ponte repassa cada linha do
+> console. Comandos de console **não têm autenticação** (vêm do console confiável).
+
+### 2. Comandos de chat (`!comando`, dentro do jogo)
+
+Exigem um jogador conectado **in-game** — **não** são acionáveis pelo console do painel.
+Gerais: `!help`, `!login <senha>`, `!info`, `!invitecode`, `!cabin`.
+Admin: `!admin`, `!unadmin`, `!listadmins`, `!kick`, `!ban`, `!unban`, `!listbans`,
+`!changewallet`, `!event`, `!authstatus`, `!lobby ...`, `!joja`.
+
+### 3. API HTTP (porta `API_PORT`)
+
+Autenticação por header `Authorization: Bearer <API_KEY>` (a doc antiga menciona
+`X-API-Key`, mas o código lê `Bearer`). Públicos (sem key): `GET /status`, `/health`,
+`/docs` (Swagger). Com key, entre outros: `POST /newgame`, `POST /reload`, `POST /time`,
+`POST /roles/admin`, `DELETE /farmhands`, `GET /players|/cabins|/settings|/stats`.
+Útil para automação externa / dashboards.
+
+## Variáveis extras (opcionais)
+
+Todas têm default seguro no egg; mexa só se precisar.
+
+| Env | Padrão | Observação |
+|-----|--------|------------|
+| `SERVER_FPS` | `0` | 0 = sem render (poupa CPU). >0 desenha p/ o VNC. |
+| `API_ENABLED` | `true` | **Não** desligue: `false` some com o log que o painel usa p/ marcar "iniciado". |
+| `MAX_LOGIN_ATTEMPTS` | `3` | `!login` errados antes do kick (com Senha do Servidor). |
+| `AUTH_TIMEOUT_SECONDS` | `120` | Kick de não-autenticados (0 = desliga). |
+| `AUTO_SLEEP_GRACE_SECONDS` | `300` | Espera do host vazio antes de dormir. |
+| `STEAM_KEEP_LANGUAGES` | vazio | Fontes por idioma (`pt-BR,ru-RU,...`). Vazio = só inglês (menor download). |
+| `VALIDATE_ON_BOOT` | `true` | Revalida arquivos do jogo a cada boot (steam-service). |
+| `HEALTH_CHECK_SECONDS` | `300` | Intervalo do health check interno. |
+| `VERBOSE_LOGGING` | `false` | Log verboso para diagnóstico. |
 
 ### Notas de implementação verificadas
 
