@@ -28,26 +28,34 @@ porque o Pterodactyl inicia sem root.
 - `STEAM_REFRESH_TOKEN` gerado uma vez localmente (rode o `setup` do projeto oficial).
   Sem ele, o Steam Guard 2FA interativo trava o boot não-interativo do Pterodactyl.
 
-## ⚠️ Premissas a verificar (este scaffold ainda não foi testado em infra real)
+## Status
 
-Estes pontos dependem de detalhes internos das imagens oficiais e precisam ser
-confirmados/ajustados ao construir e rodar na sua stack WSL+Docker+Pterodactyl v2:
+- ✅ **Build**: compila localmente (WSL) e no CI; imagem publicada em
+  `ghcr.io/drysius/games:stardew-valley-server`.
+- ⏳ **Runtime em Pterodactyl**: ainda não validado ponta a ponta (depende de credencial
+  Steam + servidor Pterodactyl real). Ver pontos abaixo.
 
-1. ~~Subcomando do steam-service~~ — **confirmado**: `serve`, com `GAME_DIR=/data/game`
-   e `PORT=3001` (WorkingDir `/app`). Já é o que o `entrypoint.sh` faz.
-   ⚠️ Risco de runtime: a imagem `sdvd/server` pode não ter o runtime .NET que o
-   steam-service precisa. Se o `dotnet` faltar no 1º boot, copie o runtime da stage
-   `steam` no Dockerfile.
-2. **Display Xvfb vs. janela/WM** — a imagem oficial usa Xvnc + WM da baseimage-gui. Se o
+### Verificado
+
+- Subcomando do steam-service: `serve`, com `GAME_DIR=/data/game` e `PORT=3001`
+  (WorkingDir `/app`). É o que o `entrypoint.sh` faz.
+- Runtime .NET copiado da imagem oficial (`/usr/share/dotnet`) — a base `sdvd/server`
+  não traz `dotnet`.
+- `Xvfb`, `xauth`, `xdpyinfo`, `SteamService.dll` e `/startapp.sh` presentes na imagem.
+- UID numérico (`USER 0`/`USER 1000`): a baseimage-gui não tem `root`/nomes no passwd.
+
+### A validar no primeiro boot (infra real)
+
+1. **Display Xvfb vs. janela/WM** — a imagem oficial usa Xvnc + WM da baseimage-gui. Se o
    SMAPI/jogo exigir um window manager, pode ser necessário subir `openbox` antes do jogo.
-3. **UID do container** — assumimos `1000`. Se o seu Wings rodar com outro UID, ajuste o
+2. **UID do container** — assumimos `1000`. Se o seu Wings rodar com outro UID, ajuste o
    `chown` no `dockerfile`.
-4. **`SDVD_COMPOSE_REV`** — fixado em `4` (valor do `docker-compose.yml` upstream). Se a
+3. **`SDVD_COMPOSE_REV`** — fixado em `4` (valor do `docker-compose.yml` upstream). Se a
    imagem base atualizar, o `startapp.sh` aborta; bump a variável no `entrypoint.sh`.
-5. **String "done" do egg** — `config.startup.done` está em `"context: Loaded save"`.
+4. **String "done" do egg** — `config.startup.done` está em `"context: Loaded save"`.
    Ajuste para a linha real que o SMAPI/mod imprime quando o servidor fica pronto, senão o
    painel não marca como "online".
-6. **VNC web UI** — não exposta nesta adaptação. Administre pela API HTTP (porta 8080).
+5. **VNC web UI** — não exposta nesta adaptação. Administre pela API HTTP (porta 8080).
 
 ## Build local / teste
 
