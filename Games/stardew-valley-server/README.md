@@ -37,11 +37,13 @@ porque o Pterodactyl inicia sem root.
 
 ## Portas
 
-Todas editáveis no egg. O jogo usa a porta primária alocada (`SERVER_PORT`).
+A porta do **jogo** é a alocação **primária** do servidor (`SERVER_PORT`), definida pelo
+Pterodactyl na inicialização — não há variável pra isso. Jogadores conectam por IP
+(`IP:porta`) ou por invite code (Steam relay, sem porta aberta). As demais são variáveis
+editáveis no egg:
 
 | Env | Padrão | Observação |
 |-----|--------|------------|
-| `GAME_PORT` | 24642/udp | Porta do jogo; segue `SERVER_PORT` (alocação primária). Jogadores conectam por IP (`IP:porta`) ou invite code. |
 | `QUERY_PORT` | 27015/udp | Query Steam (server browser). Opcional. |
 | `API_PORT` | 8080/tcp | API HTTP (admin). Alocação separada. Escuta em todas as interfaces (`+:porta`). |
 | `VNC_PORT` | 5900/tcp | Servidor VNC (ver abaixo). |

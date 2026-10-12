@@ -48,9 +48,8 @@ export XDG_CONFIG_HOME=/home/container/xdg/config
 export SMAPI_MODS_PATH=/home/container/Mods
 export DISPLAY_WIDTH=${DISPLAY_WIDTH:-1280}
 export DISPLAY_HEIGHT=${DISPLAY_HEIGHT:-720}
-# Porta do jogo = alocacao primaria do Pterodactyl (SERVER_PORT). Default 24642.
-# Jogadores conectam por IP (IP:porta) ou por invite code (Steam relay, sem porta).
-export GAME_PORT=${SERVER_PORT:-${GAME_PORT:-24642}}
+# A porta do jogo e a alocacao primaria (SERVER_PORT), definida pelo Pterodactyl na
+# inicializacao -- nao precisa de variavel/export aqui.
 export QUERY_PORT=${QUERY_PORT:-27015}
 export API_PORT=${API_PORT:-8080}
 export VNC_PORT=${VNC_PORT:-5900}
