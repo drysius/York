@@ -11,11 +11,16 @@
 # baseimage-gui tem no boot (o chown de /data e /config e feito aqui, no build).
 # =============================================================================
 
+# Tag das imagens oficiais. Nao existe "latest" publicado ainda (o projeto esta na
+# linha 1.5.0-preview); "preview" e o canal corrente. Fixe uma versao (ex.:
+# 1.5.0-preview.140) se quiser build reproduzivel.
+ARG SDVD_TAG=preview
+
 # Downloader da Steam (vira processo em background dentro do mesmo container)
-FROM sdvd/steam-service:latest AS steam
+FROM sdvd/steam-service:${SDVD_TAG} AS steam
 
 # Imagem base = servidor oficial (ja traz SMAPI, o mod, startapp.sh, Xvnc, dotnet)
-FROM sdvd/server:latest
+FROM sdvd/server:${SDVD_TAG}
 
 LABEL maintainer="drysius" \
       org.opencontainers.image.source="https://github.com/stardew-valley-dedicated-server/server" \

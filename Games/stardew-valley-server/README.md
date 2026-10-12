@@ -33,9 +33,11 @@ porque o Pterodactyl inicia sem root.
 Estes pontos dependem de detalhes internos das imagens oficiais e precisam ser
 confirmados/ajustados ao construir e rodar na sua stack WSL+Docker+Pterodactyl v2:
 
-1. **Subcomando do steam-service** — o entrypoint usa `dotnet SteamService.dll serve`.
-   Confirme o comando/entrypoint real de `sdvd/steam-service` (pode ser outro verbo, ou
-   o próprio ENTRYPOINT da imagem). Ajuste no `entrypoint.sh`.
+1. ~~Subcomando do steam-service~~ — **confirmado**: `serve`, com `GAME_DIR=/data/game`
+   e `PORT=3001` (WorkingDir `/app`). Já é o que o `entrypoint.sh` faz.
+   ⚠️ Risco de runtime: a imagem `sdvd/server` pode não ter o runtime .NET que o
+   steam-service precisa. Se o `dotnet` faltar no 1º boot, copie o runtime da stage
+   `steam` no Dockerfile.
 2. **Display Xvfb vs. janela/WM** — a imagem oficial usa Xvnc + WM da baseimage-gui. Se o
    SMAPI/jogo exigir um window manager, pode ser necessário subir `openbox` antes do jogo.
 3. **UID do container** — assumimos `1000`. Se o seu Wings rodar com outro UID, ajuste o
