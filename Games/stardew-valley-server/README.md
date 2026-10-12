@@ -35,22 +35,20 @@ porque o Pterodactyl inicia sem root.
 - ✅ Tudo grava sob `/home/container` (único path gravável no Pterodactyl).
 - ✅ Xvnc (display + VNC), steam-service (:3001) e IP connections funcionando.
 
-## Portas (importante)
+## Portas
 
-| Porta | Env | Editável | Observação |
-|-------|-----|----------|------------|
-| **24642/udp** | `GAME_PORT` | ❌ fixa | Porta do jogo — **fixa no Stardew** (`const DefaultGamePort`). Clientes conectam nela por IP. **Aloque 24642/udp como porta PRIMÁRIA** (SERVER_PORT) para conexão por IP. |
-| 27015/udp | `QUERY_PORT` | ✅ | Query Steam (server browser). Opcional. |
-| 8080/tcp | `API_PORT` | ✅ | API HTTP (admin). Use uma alocação separada (≠ 24642). |
-| 5900/tcp | `VNC_PORT` | ✅ | Servidor VNC (ver abaixo). |
+Todas editáveis no egg. O jogo usa a porta primária alocada (`SERVER_PORT`).
 
-A porta do jogo **não pode ser trocada** — o Stardew a tem hardcoded em 24642 e os clientes
-vanilla sempre conectam nela. Por isso a alocação primária deve ser 24642/udp. As demais
-(API, query, VNC) são livres e editáveis no egg.
+| Env | Padrão | Observação |
+|-----|--------|------------|
+| `GAME_PORT` | 24642/udp | Porta do jogo; segue `SERVER_PORT` (alocação primária). Jogadores conectam por IP (`IP:porta`) ou invite code. |
+| `QUERY_PORT` | 27015/udp | Query Steam (server browser). Opcional. |
+| `API_PORT` | 8080/tcp | API HTTP (admin). Alocação separada. Escuta em todas as interfaces (`+:porta`). |
+| `VNC_PORT` | 5900/tcp | Servidor VNC (ver abaixo). |
 
 **Conexão por IP** vem ligada por padrão (`ALLOW_IP_CONNECTIONS=true`), aplicada ao
-`server-settings.json` no boot. Players conectam no IP da linha "Network" do banner, porta
-24642. Alternativa sem porta: o **invite code** (Steam relay), mostrado no log.
+`server-settings.json` no boot. Players conectam no IP da linha "Network" do banner.
+Alternativa sem porta aberta: o **invite code** (Steam relay), mostrado no log.
 
 ## VNC
 

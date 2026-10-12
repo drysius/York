@@ -48,10 +48,9 @@ export XDG_CONFIG_HOME=/home/container/xdg/config
 export SMAPI_MODS_PATH=/home/container/Mods
 export DISPLAY_WIDTH=${DISPLAY_WIDTH:-1280}
 export DISPLAY_HEIGHT=${DISPLAY_HEIGHT:-720}
-# A porta do JOGO e fixa 24642/udp (const DefaultGamePort no Stardew/mod). Os jogadores
-# conectam nela por IP, ou via invite code (Steam relay, sem porta). SERVER_PORT = porta
-# primaria alocada: use 24642 pra ela coincidir com a do jogo. A API usa porta propria.
-export GAME_PORT=24642
+# Porta do jogo = alocacao primaria do Pterodactyl (SERVER_PORT). Default 24642.
+# Jogadores conectam por IP (IP:porta) ou por invite code (Steam relay, sem porta).
+export GAME_PORT=${SERVER_PORT:-${GAME_PORT:-24642}}
 export QUERY_PORT=${QUERY_PORT:-27015}
 export API_PORT=${API_PORT:-8080}
 export VNC_PORT=${VNC_PORT:-5900}
@@ -60,11 +59,6 @@ export STEAM_AUTH_URL="http://127.0.0.1:${STEAM_AUTH_PORT}"
 export SETTINGS_PATH=${SETTINGS_PATH:-/home/container/settings/server-settings.json}
 # startapp.sh aborta se SDVD_COMPOSE_REV nao bater com o esperado da imagem.
 export SDVD_COMPOSE_REV=${SDVD_COMPOSE_REV:-4}
-
-if [ -n "${SERVER_PORT:-}" ] && [ "${SERVER_PORT}" != "24642" ]; then
-    echo "[ptero] AVISO: a porta primaria (SERVER_PORT=${SERVER_PORT}) nao e 24642."
-    echo "[ptero] Para conexao por IP direto, aloque 24642/udp ao servidor (porta fixa do Stardew)."
-fi
 
 # -----------------------------------------------------------------------------
 # 2b) IP CONNECTIONS -- ativado por padrao (host). Controlado por ALLOW_IP_CONNECTIONS.
