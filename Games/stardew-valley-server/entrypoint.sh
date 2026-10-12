@@ -153,6 +153,21 @@ echo "[ptero] iniciando steam-service em 127.0.0.1:${STEAM_AUTH_PORT}..."
 STEAM_PID=$!
 
 # -----------------------------------------------------------------------------
+# 4a2) PORTA DO JOGO: o Stardew escuta FIXO em 24642/udp (jogo) e 27015/udp (query)
+# dentro do container -- constantes do mod (GameServer.Init), sem override por env. O
+# Wings publica a alocacao 1:1, entao para a conexao por IP a alocacao PRIMARIA do
+# servidor precisa ser 24642/udp. Avisamos no boot se estiver diferente.
+# -----------------------------------------------------------------------------
+if [ -n "${SERVER_PORT:-}" ] && [ "${SERVER_PORT}" != "24642" ]; then
+    echo "[ptero] ====================================================================="
+    echo "[ptero]  ATENCAO: a alocacao primaria e ${SERVER_PORT}, mas o jogo escuta FIXO"
+    echo "[ptero]  na 24642/udp. A conexao por IP direto NAO vai funcionar."
+    echo "[ptero]  Defina a porta 24642 como alocacao primaria do servidor (o invite"
+    echo "[ptero]  code via Steam relay continua funcionando em qualquer porta)."
+    echo "[ptero] ====================================================================="
+fi
+
+# -----------------------------------------------------------------------------
 # 4b) PONTE DE COMANDOS: console do Pterodactyl (stdin) -> console do SMAPI.
 # O startapp.sh roda o SMAPI lendo de um FIFO (/tmp/junimo/smapi-input), NAO do
 # stdin do processo (o caminho oficial e o `attach-cli`). Entao repassamos o nosso

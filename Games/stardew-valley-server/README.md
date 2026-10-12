@@ -37,20 +37,22 @@ porque o Pterodactyl inicia sem root.
 
 ## Portas
 
-A porta do **jogo** é a alocação **primária** do servidor (`SERVER_PORT`), definida pelo
-Pterodactyl na inicialização — não há variável pra isso. Jogadores conectam por IP
-(`IP:porta`) ou por invite code (Steam relay, sem porta aberta). As demais são variáveis
-editáveis no egg:
+O jogo escuta **fixo** em `24642/udp` (jogo) e `27015/udp` (query) **dentro do container** —
+são constantes do mod (`GameServer.Init`), não vêm de env e não há como mudar. O Wings publica
+a alocação **primária** 1:1 (`host:PORTA → container:PORTA`), então, para a **conexão por IP
+direto**, a alocação primária do servidor **precisa ser a porta `24642/udp`**. O entrypoint
+loga um aviso no boot se a alocação primária estiver diferente.
 
 | Env | Padrão | Observação |
 |-----|--------|------------|
 | `QUERY_PORT` | 27015/udp | Query Steam (server browser). Opcional. |
-| `API_PORT` | 8080/tcp | API HTTP (admin). Alocação separada. Escuta em todas as interfaces (`+:porta`). |
+| `API_PORT` | 8080/tcp | API HTTP (admin). Alocação separada. Escuta em `+:porta`. |
 | `VNC_PORT` | 5900/tcp | Servidor VNC (ver abaixo). |
 
-**Conexão por IP** vem ligada por padrão (`ALLOW_IP_CONNECTIONS=true`), aplicada ao
-`server-settings.json` no boot. Players conectam no IP da linha "Network" do banner.
-Alternativa sem porta aberta: o **invite code** (Steam relay), mostrado no log.
+**Conexão por IP** vem ligada por padrão (`ALLOW_IP_CONNECTIONS=true`, aplicada ao
+`server-settings.json` no boot). Com a alocação primária em 24642, os jogadores conectam em
+**`IP:24642`**. Alternativa sem porta específica: o **invite code** (Steam relay, funciona em
+qualquer porta), mostrado no log.
 
 ## VNC
 
