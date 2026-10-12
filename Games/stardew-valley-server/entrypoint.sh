@@ -90,8 +90,11 @@ if [ -n "${VNC_PASSWORD:-}" ] && command -v vncpasswd >/dev/null 2>&1; then
     fi
 fi
 echo "[ptero] iniciando Xvnc em ${DISPLAY} (${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}, VNC na porta ${VNC_PORT})..."
+# BlacklistThreshold alto: evita banir o IP quando o cliente erra o handshake
+# (ex.: tentar abrir a porta VNC no navegador). O blacklist tambem some ao reiniciar.
 Xvnc "${DISPLAY}" -geometry "${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}" -depth 24 \
-     -rfbport "${VNC_PORT}" ${VNC_SEC} -AlwaysShared -desktop "Stardew" &
+     -rfbport "${VNC_PORT}" ${VNC_SEC} -AlwaysShared -desktop "Stardew" \
+     -BlacklistThreshold=1000000 -BlacklistTimeout=5 &
 XVFB_PID=$!
 for _ in $(seq 1 40); do
     xdpyinfo -display "${DISPLAY}" >/dev/null 2>&1 && break
