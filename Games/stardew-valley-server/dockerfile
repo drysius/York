@@ -26,7 +26,9 @@ LABEL maintainer="drysius" \
       org.opencontainers.image.source="https://github.com/stardew-valley-dedicated-server/server" \
       org.opencontainers.image.description="Stardew Valley Dedicated Server adaptado para Pterodactyl"
 
-USER root
+# UID numerico: a baseimage-gui nao tem o nome "root" no /etc/passwd, entao
+# "USER root" nao resolve. "USER 0" dispensa o lookup no passwd.
+USER 0
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Display virtual headless (Xvfb) + utilitarios de X. A imagem oficial usa Xvnc
@@ -47,7 +49,8 @@ RUN ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 # Usuario do Pterodactyl + posse dos diretorios ja no build.
 # A imagem oficial faz "chown -R /data /config" como root no cont-init; como o
 # Pterodactyl inicia sem root, fazemos isso aqui, de uma vez.
-RUN (useradd -m -d /home/container -u 1000 container 2>/dev/null || true) \
+RUN (groupadd -g 1000 container 2>/dev/null || true) \
+ && (useradd -m -d /home/container -u 1000 -g 1000 container 2>/dev/null || true) \
  && mkdir -p /data/game /data/Mods /data/settings /data/diagnostics \
              /config/xdg/config/StardewValley /home/container \
  && chown -R 1000:1000 /data /config /home/container
@@ -55,7 +58,8 @@ RUN (useradd -m -d /home/container -u 1000 container 2>/dev/null || true) \
 COPY ./entrypoint.sh /ptero-entrypoint.sh
 RUN chmod +x /ptero-entrypoint.sh
 
-USER container
+# UID numerico pelo mesmo motivo do USER 0 acima (passwd pode nao ter o nome).
+USER 1000
 ENV  USER=container \
      HOME=/config \
      DISPLAY=:0 \
