@@ -51,9 +51,29 @@ RUN ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 # Pterodactyl inicia sem root, fazemos isso aqui, de uma vez.
 RUN (groupadd -g 1000 container 2>/dev/null || true) \
  && (useradd -m -d /home/container -u 1000 -g 1000 container 2>/dev/null || true) \
- && mkdir -p /data/game /data/Mods /data/settings /data/diagnostics \
-             /config/xdg/config/StardewValley /home/container \
- && chown -R 1000:1000 /data /config /home/container
+ && mkdir -p /home/container
+
+# Pterodactyl so deixa /home/container (e /tmp) GRAVAVEIS; /data e /config ficam
+# read-only em runtime, e o Wings roda o container com um uid proprio (nao o do build).
+# Entao: guardamos o conteudo baked (mod JunimoServer, configs, etc.) em /opt/sdvd-default
+# e trocamos /data e /config por symlinks para dentro do volume persistente. O entrypoint
+# semeia os defaults no boot (o mount do Pterodactyl sobrepoe /home/container).
+RUN set -x; \
+    mkdir -p /opt/sdvd-default; \
+    cp -a /data /opt/sdvd-default/data 2>/dev/null || mkdir -p /opt/sdvd-default/data; \
+    cp -a /config /opt/sdvd-default/config 2>/dev/null || mkdir -p /opt/sdvd-default/config; \
+    rm -rf /data /config; \
+    ln -s /home/container/data /data; \
+    ln -s /home/container/config /config; \
+    chmod -R a+rX /opt/sdvd-default; \
+    chown -R 1000:1000 /home/container
+
+# A imagem base declara VOLUME /data/game e /config/xdg/config/StardewValley. Sob o
+# Pterodactyl, o Docker monta volumes anonimos root nesses caminhos, que o uid de
+# runtime nao consegue gravar. O startapp.sh tem /data/* hardcoded, entao reescrevemos
+# essas referencias para /home/container/* (fora de qualquer path de VOLUME, gravavel).
+# Saves/config do jogo sao redirecionados por HOME/XDG_CONFIG_HOME no entrypoint.
+RUN sed -i 's#/data/#/home/container/#g' /startapp.sh
 
 COPY ./entrypoint.sh /ptero-entrypoint.sh
 RUN chmod +x /ptero-entrypoint.sh
@@ -61,10 +81,10 @@ RUN chmod +x /ptero-entrypoint.sh
 # UID numerico pelo mesmo motivo do USER 0 acima (passwd pode nao ter o nome).
 USER 1000
 ENV  USER=container \
-     HOME=/config \
+     HOME=/home/container/home \
      DISPLAY=:0 \
-     XDG_CONFIG_HOME=/config/xdg/config \
-     SMAPI_MODS_PATH=/data/Mods
+     XDG_CONFIG_HOME=/home/container/xdg/config \
+     SMAPI_MODS_PATH=/home/container/Mods
 
 WORKDIR /home/container
 STOPSIGNAL SIGINT
