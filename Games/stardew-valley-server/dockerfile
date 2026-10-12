@@ -1,0 +1,58 @@
+# =============================================================================
+# Stardew Valley Dedicated Server (Junimo Server) -- Pterodactyl single-container
+# Upstream: https://github.com/stardew-valley-dedicated-server/server
+#
+# O projeto oficial e um stack docker-compose com 2+ containers:
+#   - sdvd/server        -> o jogo (SMAPI + mod JunimoServer + VNC) na baseimage-gui
+#   - sdvd/steam-service -> sidecar que baixa os arquivos do jogo da Steam via HTTP
+#
+# O Pterodactyl roda UM container por servidor, como usuario NAO-root. Esta imagem
+# junta os dois servicos em um container so e remove a dependencia de root que a
+# baseimage-gui tem no boot (o chown de /data e /config e feito aqui, no build).
+# =============================================================================
+
+# Downloader da Steam (vira processo em background dentro do mesmo container)
+FROM sdvd/steam-service:latest AS steam
+
+# Imagem base = servidor oficial (ja traz SMAPI, o mod, startapp.sh, Xvnc, dotnet)
+FROM sdvd/server:latest
+
+LABEL maintainer="drysius" \
+      org.opencontainers.image.source="https://github.com/stardew-valley-dedicated-server/server" \
+      org.opencontainers.image.description="Stardew Valley Dedicated Server adaptado para Pterodactyl"
+
+USER root
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Display virtual headless (Xvfb) + utilitarios de X. A imagem oficial usa Xvnc
+# conduzido pela baseimage-gui/cinit (que exige root). No Pterodactyl nos subimos o
+# display sozinhos como usuario comum, entao Xvfb e o caminho mais robusto.
+RUN (add-pkg xvfb x11-utils xauth 2>/dev/null) \
+ || (apt-get update && apt-get install -y --no-install-recommends xvfb x11-utils xauth \
+     && rm -rf /var/lib/apt/lists/*)
+
+# Traz o downloader da Steam para dentro da imagem (substitui o container sidecar)
+COPY --from=steam /app /opt/steam-service
+
+# Usuario do Pterodactyl + posse dos diretorios ja no build.
+# A imagem oficial faz "chown -R /data /config" como root no cont-init; como o
+# Pterodactyl inicia sem root, fazemos isso aqui, de uma vez.
+RUN (useradd -m -d /home/container -u 1000 container 2>/dev/null || true) \
+ && mkdir -p /data/game /data/Mods /data/settings /data/diagnostics \
+             /config/xdg/config/StardewValley /home/container \
+ && chown -R 1000:1000 /data /config /home/container
+
+COPY ./entrypoint.sh /ptero-entrypoint.sh
+RUN chmod +x /ptero-entrypoint.sh
+
+USER container
+ENV  USER=container \
+     HOME=/config \
+     DISPLAY=:0 \
+     XDG_CONFIG_HOME=/config/xdg/config \
+     SMAPI_MODS_PATH=/data/Mods
+
+WORKDIR /home/container
+STOPSIGNAL SIGINT
+
+CMD ["/bin/bash", "/ptero-entrypoint.sh"]
