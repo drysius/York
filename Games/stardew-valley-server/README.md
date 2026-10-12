@@ -30,36 +30,49 @@ porque o Pterodactyl inicia sem root.
 
 ## Status
 
-- ✅ **Build**: compila localmente (WSL) e no CI; imagem publicada em
-  `ghcr.io/drysius/games:stardew-valley-server`.
-- ✅ **Boot** (verificado como uid não-build, com os volumes anônimos da imagem): sobe
-  Xvfb, steam-service (:3001) e o servidor (SMAPI + phase responder na porta alocada),
-  gravando tudo sob `/home/container`. Sem erros de permissão/filesystem.
-- ✅ **Porta**: segue `SERVER_PORT` (alocação primária do Pterodactyl) automaticamente.
-- ⏳ **Download + jogo rodando**: precisa de credencial Steam real (conta dona do jogo).
-  Sem ela o servidor fica em "Waiting for steam-auth..." (comportamento correto).
+- ✅ **Build** e **boot** verificados (local WSL + CI). O servidor sobe completo: baixa o
+  jogo, instala SMAPI, carrega o mod, cria save, conecta na Steam e gera invite code.
+- ✅ Tudo grava sob `/home/container` (único path gravável no Pterodactyl).
+- ✅ Xvnc (display + VNC), steam-service (:3001) e IP connections funcionando.
 
-### Verificado
+## Portas (importante)
 
-- Subcomando do steam-service: `serve`, com `GAME_DIR=/data/game` e `PORT=3001`
-  (WorkingDir `/app`). É o que o `entrypoint.sh` faz.
-- Runtime .NET copiado da imagem oficial (`/usr/share/dotnet`) — a base `sdvd/server`
-  não traz `dotnet`.
-- `Xvfb`, `xauth`, `xdpyinfo`, `SteamService.dll` e `/startapp.sh` presentes na imagem.
+| Porta | Env | Editável | Observação |
+|-------|-----|----------|------------|
+| **24642/udp** | `GAME_PORT` | ❌ fixa | Porta do jogo — **fixa no Stardew** (`const DefaultGamePort`). Clientes conectam nela por IP. **Aloque 24642/udp como porta PRIMÁRIA** (SERVER_PORT) para conexão por IP. |
+| 27015/udp | `QUERY_PORT` | ✅ | Query Steam (server browser). Opcional. |
+| 8080/tcp | `API_PORT` | ✅ | API HTTP (admin). Use uma alocação separada (≠ 24642). |
+| 5900/tcp | `VNC_PORT` | ✅ | Servidor VNC (ver abaixo). |
+
+A porta do jogo **não pode ser trocada** — o Stardew a tem hardcoded em 24642 e os clientes
+vanilla sempre conectam nela. Por isso a alocação primária deve ser 24642/udp. As demais
+(API, query, VNC) são livres e editáveis no egg.
+
+**Conexão por IP** vem ligada por padrão (`ALLOW_IP_CONNECTIONS=true`), aplicada ao
+`server-settings.json` no boot. Players conectam no IP da linha "Network" do banner, porta
+24642. Alternativa sem porta: o **invite code** (Steam relay), mostrado no log.
+
+## VNC
+
+A imagem roda **Xvnc** servindo o display `:0` e um servidor VNC na porta `VNC_PORT`
+(padrão 5900). Aloque essa porta, defina `VNC_PASSWORD` (máx 8 chars) e conecte com um
+cliente VNC (TigerVNC, RealVNC) em `IP:VNC_PORT`. Sem senha o VNC fica aberto.
+(Não é a UI web noVNC do projeto original — essa depende do stack root da baseimage-gui.)
+
+### Notas de implementação verificadas
+
+- steam-service: subcomando `serve`, `GAME_DIR`/`SESSION_DIR` sob `/home/container`.
+- Runtime .NET copiado de `/usr/share/dotnet` (a base `sdvd/server` não traz `dotnet`).
+- `startapp.sh` reescrito no build (`/data/*` → `/home/container/*`) para fugir dos
+  VOLUMEs root-owned.
 - UID numérico (`USER 0`/`USER 1000`): a baseimage-gui não tem `root`/nomes no passwd.
 
-### A validar no primeiro boot (infra real)
+### A validar conforme uso
 
-1. **Display Xvfb vs. janela/WM** — a imagem oficial usa Xvnc + WM da baseimage-gui. Se o
-   SMAPI/jogo exigir um window manager, pode ser necessário subir `openbox` antes do jogo.
-2. **UID do container** — assumimos `1000`. Se o seu Wings rodar com outro UID, ajuste o
-   `chown` no `dockerfile`.
-3. **`SDVD_COMPOSE_REV`** — fixado em `4` (valor do `docker-compose.yml` upstream). Se a
-   imagem base atualizar, o `startapp.sh` aborta; bump a variável no `entrypoint.sh`.
-4. **String "done" do egg** — `config.startup.done` está em `"context: Loaded save"`.
-   Ajuste para a linha real que o SMAPI/mod imprime quando o servidor fica pronto, senão o
-   painel não marca como "online".
-5. **VNC web UI** — não exposta nesta adaptação. Administre pela API HTTP (porta 8080).
+- **UID do container**: Wings normalmente roda com uid próprio; os writes vão todos para
+  `/home/container` (dono = uid de runtime), então independe do uid.
+- **`SDVD_COMPOSE_REV`**: fixado em `4`; se a imagem base atualizar e o `startapp.sh`
+  reclamar, bump no `entrypoint.sh`.
 
 ## Build local / teste
 

@@ -31,12 +31,12 @@ LABEL maintainer="drysius" \
 USER 0
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Display virtual headless (Xvfb) + utilitarios de X. A imagem oficial usa Xvnc
-# conduzido pela baseimage-gui/cinit (que exige root). No Pterodactyl nos subimos o
-# display sozinhos como usuario comum, entao Xvfb e o caminho mais robusto.
-# Usamos add-pkg (helper da baseimage-gui): apt-get cru falha nesta base porque
-# /var/log e symlink para /config, um volume ausente no build.
-RUN add-pkg xvfb x11-utils xauth
+# Display + VNC: a base ja traz o Xvnc (TigerVNC), que serve o display :0 E um
+# servidor VNC numa porta -- usamos ele direto (como usuario comum) em vez do
+# cinit/baseimage-gui que exige root. x11-utils (xdpyinfo), xauth e jq (patch do
+# server-settings.json no boot) via add-pkg; apt-get cru falha nesta base porque
+# /var/log e symlink para /config (volume ausente no build).
+RUN add-pkg x11-utils xauth jq
 
 # Traz o downloader da Steam para dentro da imagem (substitui o container sidecar)
 COPY --from=steam /app /opt/steam-service

@@ -35,7 +35,7 @@ fi
 [ -f /opt/sdvd-default/data/smapi-config.json ] \
     && cp -f /opt/sdvd-default/data/smapi-config.json /home/container/smapi-config.json 2>/dev/null || true
 
-# Xvfb nao cria /tmp/.X11-unix sem ser root; criamos nos (uid de runtime, /tmp gravavel).
+# Xvnc nao cria /tmp/.X11-unix sem ser root; criamos nos (uid de runtime, /tmp gravavel).
 mkdir -p /tmp/.X11-unix 2>/dev/null || true
 chmod 1777 /tmp/.X11-unix 2>/dev/null || true
 
@@ -48,21 +48,57 @@ export XDG_CONFIG_HOME=/home/container/xdg/config
 export SMAPI_MODS_PATH=/home/container/Mods
 export DISPLAY_WIDTH=${DISPLAY_WIDTH:-1280}
 export DISPLAY_HEIGHT=${DISPLAY_HEIGHT:-720}
-# Porta base do servidor: o Pterodactyl injeta SERVER_PORT com a alocacao primaria.
-# Ela tem prioridade; cai para API_PORT e por fim 8080.
-export API_PORT=${SERVER_PORT:-${API_PORT:-8080}}
+# A porta do JOGO e fixa 24642/udp (const DefaultGamePort no Stardew/mod). Os jogadores
+# conectam nela por IP, ou via invite code (Steam relay, sem porta). SERVER_PORT = porta
+# primaria alocada: use 24642 pra ela coincidir com a do jogo. A API usa porta propria.
+export GAME_PORT=24642
+export QUERY_PORT=${QUERY_PORT:-27015}
+export API_PORT=${API_PORT:-8080}
+export VNC_PORT=${VNC_PORT:-5900}
 export STEAM_AUTH_PORT=${STEAM_AUTH_PORT:-3001}
 export STEAM_AUTH_URL="http://127.0.0.1:${STEAM_AUTH_PORT}"
 export SETTINGS_PATH=${SETTINGS_PATH:-/home/container/settings/server-settings.json}
 # startapp.sh aborta se SDVD_COMPOSE_REV nao bater com o esperado da imagem.
-# Mantemos igual ao docker-compose.yml do upstream (bump conforme a imagem muda).
 export SDVD_COMPOSE_REV=${SDVD_COMPOSE_REV:-4}
 
+if [ -n "${SERVER_PORT:-}" ] && [ "${SERVER_PORT}" != "24642" ]; then
+    echo "[ptero] AVISO: a porta primaria (SERVER_PORT=${SERVER_PORT}) nao e 24642."
+    echo "[ptero] Para conexao por IP direto, aloque 24642/udp ao servidor (porta fixa do Stardew)."
+fi
+
 # -----------------------------------------------------------------------------
-# 3) DISPLAY VIRTUAL (Xvfb :0) -- o jogo renderiza mesmo headless
+# 2b) IP CONNECTIONS -- ativado por padrao (host). Controlado por ALLOW_IP_CONNECTIONS.
+# So vem do server-settings.json (sem env no mod), entao escrevemos/patchamos o JSON.
 # -----------------------------------------------------------------------------
-echo "[ptero] iniciando Xvfb em ${DISPLAY} (${DISPLAY_WIDTH}x${DISPLAY_HEIGHT})..."
-Xvfb "${DISPLAY}" -screen 0 "${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}x24" -nolisten tcp &
+case "${ALLOW_IP_CONNECTIONS:-true}" in true|TRUE|1|yes) IPVAL=true;; *) IPVAL=false;; esac
+mkdir -p "$(dirname "${SETTINGS_PATH}")"
+if [ ! -f "${SETTINGS_PATH}" ]; then
+    printf '{"Server":{"AllowIpConnections":%s}}\n' "${IPVAL}" > "${SETTINGS_PATH}"
+elif command -v jq >/dev/null 2>&1; then
+    _tmp=$(mktemp)
+    if jq --argjson v "${IPVAL}" '.Server.AllowIpConnections=$v' "${SETTINGS_PATH}" > "${_tmp}" 2>/dev/null; then
+        mv "${_tmp}" "${SETTINGS_PATH}"
+    else
+        rm -f "${_tmp}"
+    fi
+fi
+echo "[ptero] AllowIpConnections=${IPVAL} (conexao por IP direto em 24642/udp)"
+
+# -----------------------------------------------------------------------------
+# 3) DISPLAY + VNC (Xvnc :0) -- serve o display do jogo E o servidor VNC numa porta.
+# Com VNC_PASSWORD usa autenticacao; sem senha fica aberto (defina uma senha!).
+# -----------------------------------------------------------------------------
+VNC_SEC="-SecurityTypes None"
+if [ -n "${VNC_PASSWORD:-}" ] && command -v vncpasswd >/dev/null 2>&1; then
+    mkdir -p "${HOME}/.vnc"
+    if printf '%s\n%s\n' "${VNC_PASSWORD}" "${VNC_PASSWORD}" | vncpasswd -f > "${HOME}/.vnc/passwd" 2>/dev/null; then
+        chmod 600 "${HOME}/.vnc/passwd"
+        VNC_SEC="-SecurityTypes VncAuth -PasswordFile ${HOME}/.vnc/passwd"
+    fi
+fi
+echo "[ptero] iniciando Xvnc em ${DISPLAY} (${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}, VNC na porta ${VNC_PORT})..."
+Xvnc "${DISPLAY}" -geometry "${DISPLAY_WIDTH}x${DISPLAY_HEIGHT}" -depth 24 \
+     -rfbport "${VNC_PORT}" ${VNC_SEC} -AlwaysShared -desktop "Stardew" &
 XVFB_PID=$!
 for _ in $(seq 1 40); do
     xdpyinfo -display "${DISPLAY}" >/dev/null 2>&1 && break
