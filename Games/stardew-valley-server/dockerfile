@@ -32,12 +32,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Display virtual headless (Xvfb) + utilitarios de X. A imagem oficial usa Xvnc
 # conduzido pela baseimage-gui/cinit (que exige root). No Pterodactyl nos subimos o
 # display sozinhos como usuario comum, entao Xvfb e o caminho mais robusto.
-RUN (add-pkg xvfb x11-utils xauth 2>/dev/null) \
- || (apt-get update && apt-get install -y --no-install-recommends xvfb x11-utils xauth \
-     && rm -rf /var/lib/apt/lists/*)
+# Usamos add-pkg (helper da baseimage-gui): apt-get cru falha nesta base porque
+# /var/log e symlink para /config, um volume ausente no build.
+RUN add-pkg xvfb x11-utils xauth
 
 # Traz o downloader da Steam para dentro da imagem (substitui o container sidecar)
 COPY --from=steam /app /opt/steam-service
+
+# A base sdvd/server nao traz o runtime .NET (o jogo e self-contained). O steam-service
+# precisa dele, entao copiamos o runtime da imagem oficial do downloader.
+COPY --from=steam /usr/share/dotnet /usr/share/dotnet
+RUN ln -sf /usr/share/dotnet/dotnet /usr/bin/dotnet
 
 # Usuario do Pterodactyl + posse dos diretorios ja no build.
 # A imagem oficial faz "chown -R /data /config" como root no cont-init; como o
